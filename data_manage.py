@@ -1,5 +1,5 @@
 import pandas as pd
-import database_manage as dbm
+import Database.database_manage as dbm
 
 transaction_df = pd.read_csv('fake_2025_cc_transactions.csv')
 
@@ -7,5 +7,6 @@ transaction_df = pd.read_csv('fake_2025_cc_transactions.csv')
 
 #dbm.create_new_transaction_table()
 
-print(transaction_df.head())
-        
+#print(transaction_df.head())
+
+print(transaction_df['Description'])
