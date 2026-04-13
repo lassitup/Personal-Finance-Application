@@ -1,12 +1,28 @@
+import csv
 import pandas as pd
 import Database.database_manage as dbm
 
-transaction_df = pd.read_csv('fake_2025_cc_transactions.csv')
 
-#amounts = transaction_df.iloc[-3:]
 
+# will later add ability to select database
 #dbm.create_new_transaction_table()
 
-#print(transaction_df.head())
+# Once GUI in place, option will be available for user to select file to load, for now use input
+def load_transactions():    
+    #transaction_filename = input("Enter Transaction CSV File Name: ")
+    transaction_filename = "test_transactions.csv"
 
-print(transaction_df['Description'])
+    db_to_load = []
+
+    with open(transaction_filename, newline='') as csv_file:
+        transactions = csv.reader(csv_file)
+        for transaction in transactions:
+            #print(transaction)
+            db_to_load.append(transaction)
+
+    dbm.insert_transactions_from_file(db_to_load)
+
+
+
+
+load_transactions()
