@@ -5,20 +5,51 @@ import Database.database_manage as dbm
 
 
 # will later add ability to select database
-#dbm.create_new_transaction_table()
+dbm.create_new_transaction_table()
+
+# Function to determine correction position for entry into the DB and perform lookup in Trie for transaction naming
+def parse_transactions(transactions):
+    #header = transactions[0]
+    # Transaction Table Headers: Date, Description, Amount
+    # determine the position in the original file, use that to place into 
+    position_list = []
+    # Next will return the current row with the first being the header
+    header = next(transactions)
+    for index in range(len(header)):
+        column = header[index].lower()
+        # Don't want to include any 'post dates'
+        if 'date' in column and 'post' not in column:
+            # need insert the value into the postion what where we need it to be
+            position_list.insert(0, index)
+        elif 'description' in column:
+            position_list.insert(1, index)
+        elif 'amount' in column:
+            position_list.insert(2, index)
+   
+    # create new transaction list with values in correct position for DB entry
+    updated_transactions = []
+    for transaction in transactions:
+        # change ot a date object?
+        date = transaction[position_list[0]]
+        description = transaction[position_list[1]]
+        # Convert to a float
+        amount = float(transaction[position_list[2]])
+        updated_transactions.append([date, description, amount])
+
+    return updated_transactions
+
 
 # Once GUI in place, option will be available for user to select file to load, for now use input
 def load_transactions():    
     #transaction_filename = input("Enter Transaction CSV File Name: ")
-    transaction_filename = "test_transactions.csv"
+    transaction_filename = "Transactions/test_amex_transactions.csv"
 
     db_to_load = []
 
     with open(transaction_filename, newline='') as csv_file:
         transactions = csv.reader(csv_file)
-        for transaction in transactions:
-            #print(transaction)
-            db_to_load.append(transaction)
+        db_to_load = parse_transactions(transactions)
+        # Need to test for Refunds / Returns / Payments
 
     dbm.insert_transactions_from_file(db_to_load)
 
