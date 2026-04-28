@@ -9,8 +9,8 @@ dbm.create_new_transaction_table()
 
 # Function to determine correction position for entry into the DB and perform lookup in Trie for transaction naming
 def parse_transactions(transactions):
-    #header = transactions[0]
     # Transaction Table Headers: Date, Description, Amount
+    # Would like to give user the option to select which column of the csv match
     # determine the position in the original file, use that to place into 
     position_list = []
     # Next will return the current row with the first being the header
@@ -42,7 +42,8 @@ def parse_transactions(transactions):
 # Once GUI in place, option will be available for user to select file to load, for now use input
 def load_transactions():    
     #transaction_filename = input("Enter Transaction CSV File Name: ")
-    transaction_filename = "Transactions/test_amex_transactions.csv"
+    #transaction_filename = "Transactions/test_amex_transactions.csv"
+    transaction_filename = "Transactions/test_amex_duplicates.csv"
 
     db_to_load = []
 

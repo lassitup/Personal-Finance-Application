@@ -1,10 +1,12 @@
 import sqlite3
 
 
+# Will need ability to add in card name and tie to user - will add
 def create_new_transaction_table():
     con = sqlite3.connect('Database/personal_finance_db.db')
     cursor = con.cursor()
-    
+
+
     # Query the master table to check if the transaction table as already been created
     res = cursor.execute("SELECT name FROM sqlite_master;")
     master_table = res.fetchone()
@@ -14,7 +16,8 @@ def create_new_transaction_table():
         return 
     # if the table isn't already in the DB, create it
     cursor.execute("""CREATE TABLE transactions 
-                   (id INTEGER PRIMARY KEY, 
+                (id INTEGER PRIMARY KEY, 
+                    card_issuer TEXT,
                     transaction_date TEXT,
                     description TEXT, 
                     amount REAL,
@@ -25,6 +28,7 @@ def create_new_transaction_table():
 
 # Need to determine how to load / check for duplicate - what kind of field do I need
 def insert_transactions_from_file(transaction_list):
+    # Maybe use a recursive approach for dealing with the except entries?
     con = sqlite3.connect('Database/personal_finance_db.db')
     cursor = con.cursor()
     # Use 'executemany' to perform repeated SQL statements
@@ -33,11 +37,11 @@ def insert_transactions_from_file(transaction_list):
     transactions_to_review = []
     for tranx in transaction_list:
         try:
+            # In order to use default values, we have to specify the columns we're inserting into in SQL
             cursor.execute("INSERT INTO transactions (transaction_date, description, amount) VALUES(?, ?, ?)", (tranx[0], tranx[1], tranx[2]))
         except sqlite3.Error as er:
             if er.sqlite_errorcode == 2067:
                 # Have user review the transaction and reenter it into the DB
-                print(tranx)
                 decision = input("(D)uplicate or (V)alid Transaction: ")
                 if decision.lower() == 'd':
                     #Ignore transaction and move on if duplicate
@@ -46,10 +50,18 @@ def insert_transactions_from_file(transaction_list):
                     # Re-enter it into the database - need to detemrine how to modify it for entry so constraint isn't violated
                     # maybe can extract the duplicate item from database, keep a map of the count of how many times we've encountered it and
                     # update that account as we good - could keep a new column in the DB for duplicate counts
-                    transactions_to_review.append(tranx)
+                    # query all records that are 'duplicates' then find the current max value for count of these records and then increment by 1 for new record
+                    res = cursor.execute("SELECT count FROM transactions WHERE transaction_date=? AND description=? AND amount=?", (tranx[0], tranx[1], tranx[2]))
+                    duplicates = res.fetchall()
+                    max_count = max(duplicates)[0]
+                    try:
+                        cursor.execute("INSERT INTO transactions (transaction_date, description, amount, count) VALUES(?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2], max_count + 1))
+                    except sqlite3.Error:
+                        # Need to determine how to gracefull hanndled the errors
+                        print("Database Load Error Encountered")
             else:
-                print()
-    print(transactions_to_review)
+                # Need to determine how to gracefull hanndled the errors
+                print("Database Load Error Encountered")
             #print(er.sqlite_errorname)
             #print(er.sqlite_errorcode)
 
@@ -58,7 +70,6 @@ def insert_transactions_from_file(transaction_list):
     # Append those ID's to a list and then we can manually determine which ones are duplicates when done
     # and set them to delete
     # Will I need to insert each individual line and check for error?
-
 
     con.commit()
 
