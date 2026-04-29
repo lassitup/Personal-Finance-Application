@@ -15,6 +15,10 @@ def parse_transactions(transactions):
     position_list = []
     # Next will return the current row with the first being the header
     header = next(transactions)
+    
+    # Later will give user options based on their declared cards in their profile
+    # obtain the position of where the needed column currently is in the input file
+    # we then know from which column to extract the needed data in the original input file
     for index in range(len(header)):
         column = header[index].lower()
         # Don't want to include any 'post dates'
@@ -26,15 +30,18 @@ def parse_transactions(transactions):
         elif 'amount' in column:
             position_list.insert(2, index)
    
+    card_issuer = input("Enter Name of Card Issuer: ")
     # create new transaction list with values in correct position for DB entry
     updated_transactions = []
     for transaction in transactions:
-        # change ot a date object?
+        # change to a date object?
         date = transaction[position_list[0]]
         description = transaction[position_list[1]]
         # Convert to a float
         amount = float(transaction[position_list[2]])
-        updated_transactions.append([date, description, amount])
+        if amount < 0:
+            amount *= -1
+        updated_transactions.append([card_issuer, date, description, amount])
 
     return updated_transactions
 
@@ -43,7 +50,7 @@ def parse_transactions(transactions):
 def load_transactions():    
     #transaction_filename = input("Enter Transaction CSV File Name: ")
     #transaction_filename = "Transactions/test_amex_transactions.csv"
-    transaction_filename = "Transactions/test_amex_duplicates.csv"
+    transaction_filename = "Transactions/test_amex_transactions.csv"
 
     db_to_load = []
 
