@@ -6,6 +6,13 @@ import Database.database_manage as dbm
 
 # will later add ability to select database
 dbm.create_new_transaction_table()
+dbm.create_new_vendor_table()
+
+
+vendors = dbm.get_vendors()
+vendor_aliases = dbm.get_vendor_aliases()
+
+
 
 # Function to determine correction position for entry into the DB and perform lookup in Trie for transaction naming
 def parse_transactions(transactions):
@@ -41,6 +48,7 @@ def parse_transactions(transactions):
         amount = float(transaction[position_list[2]])
         if amount < 0:
             amount *= -1
+        # I'll also need to add the type in here once I have trie / db scheme setup
         updated_transactions.append([card_issuer, date, description, amount])
 
     return updated_transactions
@@ -59,7 +67,7 @@ def load_transactions():
         db_to_load = parse_transactions(transactions)
         # Need to test for Refunds / Returns / Payments
 
-    dbm.insert_transactions_from_file(db_to_load)
+    dbm.insert_transactions_from_file(db_to_load, vendors, vendor_aliases)
 
 
 
