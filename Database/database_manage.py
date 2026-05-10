@@ -128,7 +128,16 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
         # Now that each transaction is loaded to the database, we need to load the vendor info into the database
         # We have all of the new alias names from the loan. we need to link them up to their identifying name
         # Ideally, I'd like to show the user a list of known vendor names and have them associate the alias with that vendor. 
+        if tranx[2].lower().strip() not in vendor_aliases:
+            # prompt user to select or provide a vendor
+            # enter both vendor and alias into the database
+            pass
         
+        # assign the vendor id asigned to the already known alias to the transaction
+
+
+
+
         # Initial steps
         # before we load the transactions:
         # 1. Query the database to obtain all of the current known aliases (we'll have all associated vendor ID's) - place these in a dictionary with their name as the key and vendor ID as the value
@@ -164,7 +173,7 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                     try:
                         cursor.execute("INSERT INTO transactions (card_issuer, transaction_date, description, amount, count) VALUES(?, ?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2],tranx[3], max_count + 1))
                     except sqlite3.Error:
-                        # Need to determine how to gracefull hanndled the errors
+                        # Need to determine how to gracefully handle the errors
                         print("Database Load Error Encountered")
             else:
                 # Need to determine how to gracefull hanndled the errors
@@ -172,12 +181,14 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
             #print(er.sqlite_errorname)
             #print(er.sqlite_errorcode)
 
+    '''
     for vendor_alias in transaction_vendor_aliases:
         # check if the alias is already in the dictionary, we have the vendor ID and can simply add to the alias table
         #  if not, it needs to be added and the user needs to determine the apprpriate vendor 
             # user can view current known vendors via the trie, if there isn't a match, user can add new vendor to DB
-        pass
-
+        if vendor_alias in vendor_aliases:
+            # assign 
+    '''
 
 
     # Going to have to test for duplicates as it enters the transactions into the DB
