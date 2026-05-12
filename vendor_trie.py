@@ -10,8 +10,8 @@ add new"""
 
 class TrieNodeVendor:
     def __init__(self):
-        # 1 array slot for each character of the alphabet
-        self.char_array = [None] * 26
+        # 1 array slot for each character of the alphabet plus 1 for space character
+        self.char_array = [None] * 27
         self.type = None
         self.vendor_id = None
         self.is_word = False
@@ -29,8 +29,10 @@ class VendorTrie():
         for character in key:
             # Index between 0 and 25 based on ASCII codes for lowercase letters
             index = ord(character) - ord("a")
-            if index < 0 or index > 25:
+            if (index < 0 or index > 25) and ord(character) != 32:
                 return "Vendor name must only contain letters a - z"
+            if ord(character) == 32:
+                index = 26
             if cursor.char_array[index] is None:
                 next_char = TrieNodeVendor()
                 cursor.char_array[index] = next_char
@@ -50,16 +52,21 @@ class VendorTrie():
         for character in key:
             # Index between 0 and 25 based on ASCII codes for lowercase letters
             index = ord(character) - ord("a")
-            if index < 0 or index > 25:
+            # need to handle this better for the multple elements returned
+            if (index < 0 or index > 25) and ord(character) != 32:
                 return "Vendor name must only contain letters a - z"
+            # need to add an additional slot for space character
+            if ord(character) == 32:
+                index = 26
             if cursor.char_array[index] is None:
-                return False
+                return False, cursor.vendor_id, cursor.type
             cursor = cursor.char_array[index]
-        return cursor.is_word     
+        return cursor.is_word, cursor.vendor_id, cursor.type
 
 
 
     def populate_trie_from_db(self):
-        all_vendors = dbm.get_vendors
+        # Need to reset root
+        all_vendors = dbm.get_vendors()
         for vendor in all_vendors:
-            pass
+            self.insert(vendor[1], vendor[2], vendor[0])

@@ -1,5 +1,4 @@
 import sqlite3
-import vendor_trie
 # Application needs to create database if one doesn't exist
 
 
@@ -16,8 +15,8 @@ def create_new_transaction_table():
     res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Transactions';")
     master_table = res.fetchone()
 
-    # check each returned table to see if Transactions is already included
-    if 'Transactions' in master_table:
+    # Check each returned table to see if Transactions is already included
+    if master_table is not None and 'Transactions' in master_table:
         con.close()
         return 
     # if the table isn't already in the DB, create it
@@ -28,6 +27,8 @@ def create_new_transaction_table():
                     description TEXT, 
                     amount REAL,
                     count INTEGER DEFAULT 0,
+                    vendor_id INTEGER,
+                    FOREIGN KEY (vendor_id) REFERENCES Vendors(vendor_id),
                     UNIQUE(transaction_date, description, amount, count));""") 
     con.close()
 
@@ -41,7 +42,7 @@ def create_new_vendor_table():
     master_table = res.fetchone()
 
     # check each returned table to see if Vendors is already included
-    if 'Vendors' in master_table:
+    if master_table is not None and 'Vendors' in master_table:
         con.close()
         return 
     # if the table isn't already in the DB, create it
@@ -55,7 +56,7 @@ def create_new_vendor_table():
     res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendor_Alias';")
     master_table = res.fetchone()
     # check each returned table to see if Vendor_Alias is already included
-    if 'Vendor_Alias' in master_table:
+    if master_table is not None and 'Vendor_Alias' in master_table:
         con.close()
         return 
     cursor.execute("""CREATE TABLE Vendor_Alias 
@@ -69,6 +70,8 @@ def create_new_vendor_table():
     
 
 
+# -------------------------- Data Query Functions ------------------------------------
+
 def get_vendors():
     # extract all vendors from DB
     con = sqlite3.connect('Database/personal_finance_db.db')
@@ -79,7 +82,7 @@ def get_vendors():
     master_table = res.fetchone()
 
     # check each returned table to see if Vendors is already included
-    if 'Vendors' in master_table:
+    if master_table is not None and 'Vendors' in master_table:
         res = cursor.execute("SELECT * FROM Vendors")
         vendors = res.fetchall()
         con.close()
@@ -97,7 +100,7 @@ def get_vendor_aliases():
     master_table = res.fetchone()
 
     # check each returned table to see if Vendors is already included
-    if 'Vendor_Alias' in master_table:
+    if master_table is not None and 'Vendor_Alias' in master_table:
         res = cursor.execute("SELECT vendor_alias, vendor_id FROM Vendor_Alias")
         vendor_aliases = res.fetchall()
         con.close()
@@ -107,12 +110,56 @@ def get_vendor_aliases():
 
 
 
+def get_vendor_types():
+    # extract all vendors from DB
+    con = sqlite3.connect('Database/personal_finance_db.db')
+    cursor = con.cursor()
+
+    # Query the master table to check if the vendor table as already been created
+    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
+    master_table = res.fetchone()
+
+    # check each returned table to see if Vendors is already included
+    if master_table is not None and 'Vendors' in master_table:
+        res = cursor.execute("SELECT type FROM Vendors")
+        vendors = res.fetchall()
+        con.close()
+        return vendors
+    con.close()
+    return "Vendor table does not exist"
+
+def get_vendor(vendor_name):
+    # extract all vendors from DB
+    con = sqlite3.connect('Database/personal_finance_db.db')
+    cursor = con.cursor()
+
+    # Query the master table to check if the vendor table as already been created
+    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
+    master_table = res.fetchone()
+
+    # check each returned table to see if Vendors is already included
+    if master_table is not None and 'Vendors' in master_table:
+        # need to add condition if vendor isn't found (try/except)?
+        res = cursor.execute("SELECT * FROM Vendors WHERE vendor_name=?;", (vendor_name,))
+        vendor = res.fetchall()
+        con.close()
+        return vendor
+    con.close()
+    return "Vendor table does not exist"
+
+
+
+
+
+# -------------------------- Data Insert Functions ------------------------------------
 
 # Need to determine how to load / check for duplicate - what kind of field do I need
 def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases):
     # function handles entering transactions, vendors and vendor aliases
     con = sqlite3.connect('Database/personal_finance_db.db')
     cursor = con.cursor()
+    # Need to add check for existence of table
+
     # Use 'executemany' to perform repeated SQL statements
     # Insert Null as first value passed it - this will allow SQLite to autoincrement the primary key
     #cursor.executemany("""INSERT INTO transactions VALUES(NULL, ?, ?, ?);""", transaction_list)
@@ -128,13 +175,28 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
         # Now that each transaction is loaded to the database, we need to load the vendor info into the database
         # We have all of the new alias names from the loan. we need to link them up to their identifying name
         # Ideally, I'd like to show the user a list of known vendor names and have them associate the alias with that vendor. 
+
+        # going to need a second trie instance for vendor types user can select from
         if tranx[2].lower().strip() not in vendor_aliases:
+            print(tranx)
             # prompt user to select or provide a vendor
+            vendor_name = input("Provide Vendor Name: ").lower().strip()
+            is_word, vendor_id, vendor_type = vendor_trie.search(vendor_name)
+            if not is_word:
+                vendor_type = input("Provide Vendor Type: ").lower().strip()
+                insert_vendor(vendor_name, vendor_type)
+                vendor_details = get_vendor(vendor_name)
+                vendor_id = vendor_details[0]
+                vendor_trie.insert(vendor_name, vendor_type, vendor_id)
             # enter both vendor and alias into the database
-            pass
+            else:
+                insert_vendor_alias(tranx[2].lower().strip(), vendor_id)
+                
+
         
         # assign the vendor id asigned to the already known alias to the transaction
-
+        else:
+            tranx_vendor_id = vendor_aliases[tranx[2]]
 
 
 
@@ -145,14 +207,16 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
         # 3. When the transaction load runs, we'll check within the vendor alias dictionary to see if it has already been seen.if the alias already exists, I want it to auto associate with the vendor id, and continues on. If it hasn't, we'll prompt the user to select which vendor it belongs to
         # we can print out the available vendors for now (later will be a list they can review) and then using the trie, the user can input (with autocomplete/suggest) - if the option doesn't exist, the user can provide to create a new vendor
 
+        '''
         if tranx[2] not in transaction_vendor_aliases:
             #vendors_loaded.append(tranx[2])
             transaction_vendor_aliases.add(tranx[2])
+        '''
 
         # After we've identified the appropriate vendor, load the transaction the the DB
         try:
             # In order to use default values, we have to specify the columns we're inserting into in SQL
-            cursor.execute("INSERT INTO Transactions (card_issuer, transaction_date, description, amount) VALUES(?, ?, ?, ?);", (tranx[0], tranx[1], tranx[2], tranx[3]))
+            cursor.execute("INSERT INTO Transactions (card_issuer, transaction_date, description, amount, vendor_id) VALUES(?, ?, ?, ?, ?);", (tranx[0], tranx[1], tranx[2], tranx[3], tranx_vendor_id))
         except sqlite3.Error as er:
             # Check for specific SQL error code for the unique constraint being violated
             if er.sqlite_errorcode == 2067:
@@ -171,7 +235,7 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                     duplicates = res.fetchall()
                     max_count = max(duplicates)[0]
                     try:
-                        cursor.execute("INSERT INTO transactions (card_issuer, transaction_date, description, amount, count) VALUES(?, ?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2],tranx[3], max_count + 1))
+                        cursor.execute("INSERT INTO transactions (card_issuer, transaction_date, description, amount, count, vendor_id) VALUES(?, ?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2],tranx[3], max_count + 1, tranx_vendor_id))
                     except sqlite3.Error:
                         # Need to determine how to gracefully handle the errors
                         print("Database Load Error Encountered")
@@ -197,14 +261,58 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
     # and set them to delete
     # Will I need to insert each individual line and check for error?
     
+    con.commit()
+    con.close()
 
 
+def insert_vendor(vendor, type):
+    # enter new vendor into DB
+    con = sqlite3.connect('Database/personal_finance_db.db')
+    cursor = con.cursor()
 
+    # Query the master table to ensure vendor table exists
+    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
+    master_table = res.fetchone()
 
-
-
+    # check each returned table to see if Vendors is already included
+    if master_table is not None and 'Vendors' in master_table:
+        try:
+            cursor.execute("INSERT INTO Vendors (vendor_name, type) VALUES (?, ?);", (vendor, type))
+        except sqlite3.Error as er:
+            # Check for specific SQL error code for the unique constraint being violated
+            if er.sqlite_errorcode == 2067:
+                print("Vendor already exists in the database")
+            else:
+                # Need to determine how to gracefull hanndled the errors
+                print("Database Load Error Encountered")
 
     con.commit()
+    con.close()
+
+
+def insert_vendor_alias(alias, vendor_id):
+    # enter new vendor alias into DB
+    con = sqlite3.connect('Database/personal_finance_db.db')
+    cursor = con.cursor()
+
+    # Query the master table to ensure vendor table exists
+    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
+    master_table = res.fetchone()
+
+    # check each returned table to see if Vendors is already included
+    if master_table is not None and 'Vendor_Alias' in master_table:
+        try:
+            cursor.execute("INSERT INTO Vendor_Alias (vendor_name, type) VALUES (?, ?);", (alias, vendor_id))
+        except sqlite3.Error as er:
+            # Check for specific SQL error code for the unique constraint being violated
+            if er.sqlite_errorcode == 2067:
+                print("Vendor Alias already exists in the database")
+            else:
+                # Need to determine how to gracefull hanndled the errors
+                print("Database Load Error Encountered")
+
+    con.commit()
+    con.close()
 
 
 

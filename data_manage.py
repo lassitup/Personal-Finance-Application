@@ -1,6 +1,7 @@
 import csv
 import pandas as pd
 import Database.database_manage as dbm
+import vendor_trie as vt
 
 
 
@@ -9,8 +10,12 @@ dbm.create_new_transaction_table()
 dbm.create_new_vendor_table()
 
 
-vendors = dbm.get_vendors()
+
 vendor_aliases = dbm.get_vendor_aliases()
+vendor_types = dbm.get_vendor_types()
+
+vendors = vt.VendorTrie()
+vendors.populate_trie_from_db()
 
 
 
