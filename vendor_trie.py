@@ -37,6 +37,9 @@ class VendorTrie():
                 next_char = TrieNodeVendor()
                 cursor.char_array[index] = next_char
                 cursor = next_char
+            else:
+                cursor = cursor.char_array[index]
+
         cursor.type = type
         cursor.vendor_id = vendor_id
         cursor.is_word = True
