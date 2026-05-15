@@ -183,20 +183,19 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
             vendor_name = input("Provide Vendor Name: ").lower().strip()
             is_word, vendor_id, vendor_type = vendor_trie.search(vendor_name)
             if not is_word:
+                # enter both vendor and alias into the database
                 vendor_type = input("Provide Vendor Type: ").lower().strip()
                 insert_vendor(vendor_name, vendor_type)
                 vendor_details = get_vendor(vendor_name)
-                vendor_id = vendor_details[0]
+                vendor_id = vendor_details[0][0]
                 vendor_trie.insert(vendor_name, vendor_type, vendor_id)
-            # enter both vendor and alias into the database
-            else:
                 insert_vendor_alias(tranx[2].lower().strip(), vendor_id)
                 
 
         
         # assign the vendor id asigned to the already known alias to the transaction
         else:
-            tranx_vendor_id = vendor_aliases[tranx[2]]
+            vendor_id = vendor_aliases[tranx[2]]
 
 
 
@@ -212,11 +211,12 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
             #vendors_loaded.append(tranx[2])
             transaction_vendor_aliases.add(tranx[2])
         '''
-
+        con = sqlite3.connect('Database/personal_finance_db.db')
+        cursor = con.cursor()
         # After we've identified the appropriate vendor, load the transaction the the DB
         try:
             # In order to use default values, we have to specify the columns we're inserting into in SQL
-            cursor.execute("INSERT INTO Transactions (card_issuer, transaction_date, description, amount, vendor_id) VALUES(?, ?, ?, ?, ?);", (tranx[0], tranx[1], tranx[2], tranx[3], tranx_vendor_id))
+            cursor.execute("INSERT INTO Transactions (card_issuer, transaction_date, description, amount, vendor_id) VALUES(?, ?, ?, ?, ?);", (tranx[0], tranx[1], tranx[2], tranx[3], vendor_id))
         except sqlite3.Error as er:
             # Check for specific SQL error code for the unique constraint being violated
             if er.sqlite_errorcode == 2067:
@@ -244,7 +244,8 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                 print("Database Load Error Encountered")
             #print(er.sqlite_errorname)
             #print(er.sqlite_errorcode)
-
+        con.commit()
+        con.close()
     '''
     for vendor_alias in transaction_vendor_aliases:
         # check if the alias is already in the dictionary, we have the vendor ID and can simply add to the alias table
@@ -261,15 +262,17 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
     # and set them to delete
     # Will I need to insert each individual line and check for error?
     
-    con.commit()
-    con.close()
 
 
-def insert_vendor(vendor, type):
+
+def insert_vendor(vendor, type, con=None):
     # enter new vendor into DB
-    con = sqlite3.connect('Database/personal_finance_db.db')
-    cursor = con.cursor()
+    # if we are already provided a DB connection, use the provided connection
+    db_con = con
+    if db_con is None:
+        db_con = sqlite3.connect('Database/personal_finance_db.db')
 
+    cursor = db_con.cursor()
     # Query the master table to ensure vendor table exists
     res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
     master_table = res.fetchone()
@@ -286,23 +289,29 @@ def insert_vendor(vendor, type):
                 # Need to determine how to gracefull hanndled the errors
                 print("Database Load Error Encountered")
 
-    con.commit()
-    con.close()
+    # if we are already provided a DB connection, we don't want to commit / close the connection independently here
+    if con is None:
+        db_con.commit()
+        db_con.close()
 
 
-def insert_vendor_alias(alias, vendor_id):
+
+def insert_vendor_alias(alias, vendor_id, con=None):
     # enter new vendor alias into DB
-    con = sqlite3.connect('Database/personal_finance_db.db')
-    cursor = con.cursor()
+    # if we are already provided a DB connection, use the provided connection
+    db_con = con
+    if db_con is None:
+        db_con = sqlite3.connect('Database/personal_finance_db.db')
 
+    cursor = db_con.cursor()
     # Query the master table to ensure vendor table exists
-    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
+    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendor_Alias';")
     master_table = res.fetchone()
 
     # check each returned table to see if Vendors is already included
     if master_table is not None and 'Vendor_Alias' in master_table:
         try:
-            cursor.execute("INSERT INTO Vendor_Alias (vendor_name, type) VALUES (?, ?);", (alias, vendor_id))
+            cursor.execute("INSERT INTO Vendor_Alias (vendor_alias, vendor_id) VALUES (?, ?);", (alias, vendor_id))
         except sqlite3.Error as er:
             # Check for specific SQL error code for the unique constraint being violated
             if er.sqlite_errorcode == 2067:
@@ -311,8 +320,10 @@ def insert_vendor_alias(alias, vendor_id):
                 # Need to determine how to gracefull hanndled the errors
                 print("Database Load Error Encountered")
 
-    con.commit()
-    con.close()
+    # if we are already provided a DB connection, we don't want to commit / close the connection independently here
+    if con is None:
+        db_con.commit()
+        db_con.close()
 
 
 
