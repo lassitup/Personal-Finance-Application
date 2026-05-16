@@ -104,7 +104,9 @@ def get_vendor_aliases():
         res = cursor.execute("SELECT vendor_alias, vendor_id FROM Vendor_Alias")
         vendor_aliases = res.fetchall()
         con.close()
-        return vendor_aliases
+        alias_map = {alias[0]: alias[1] for alias in vendor_aliases}
+        return alias_map
+    
     con.close()
     return "Vendor Alias table does not exist"
 
@@ -156,8 +158,7 @@ def get_vendor(vendor_name):
 # Need to determine how to load / check for duplicate - what kind of field do I need
 def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases):
     # function handles entering transactions, vendors and vendor aliases
-    con = sqlite3.connect('Database/personal_finance_db.db')
-    cursor = con.cursor()
+
     # Need to add check for existence of table
 
     # Use 'executemany' to perform repeated SQL statements
@@ -195,7 +196,7 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
         
         # assign the vendor id asigned to the already known alias to the transaction
         else:
-            vendor_id = vendor_aliases[tranx[2]]
+            vendor_id = vendor_aliases[tranx[2].lower().strip()]
 
 
 
@@ -206,11 +207,7 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
         # 3. When the transaction load runs, we'll check within the vendor alias dictionary to see if it has already been seen.if the alias already exists, I want it to auto associate with the vendor id, and continues on. If it hasn't, we'll prompt the user to select which vendor it belongs to
         # we can print out the available vendors for now (later will be a list they can review) and then using the trie, the user can input (with autocomplete/suggest) - if the option doesn't exist, the user can provide to create a new vendor
 
-        '''
-        if tranx[2] not in transaction_vendor_aliases:
-            #vendors_loaded.append(tranx[2])
-            transaction_vendor_aliases.add(tranx[2])
-        '''
+
         con = sqlite3.connect('Database/personal_finance_db.db')
         cursor = con.cursor()
         # After we've identified the appropriate vendor, load the transaction the the DB
@@ -224,6 +221,8 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                 print(tranx)
                 decision = input("(D)uplicate or (V)alid Transaction: ")
                 if decision.lower() == 'd':
+                    con.commit()
+                    con.close()
                     #Ignore transaction and move on if duplicate
                     continue
                 else:
@@ -235,7 +234,7 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                     duplicates = res.fetchall()
                     max_count = max(duplicates)[0]
                     try:
-                        cursor.execute("INSERT INTO transactions (card_issuer, transaction_date, description, amount, count, vendor_id) VALUES(?, ?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2],tranx[3], max_count + 1, tranx_vendor_id))
+                        cursor.execute("INSERT INTO transactions (card_issuer, transaction_date, description, amount, count, vendor_id) VALUES(?, ?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2],tranx[3], max_count + 1, vendor_id))
                     except sqlite3.Error:
                         # Need to determine how to gracefully handle the errors
                         print("Database Load Error Encountered")
@@ -246,14 +245,6 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
             #print(er.sqlite_errorcode)
         con.commit()
         con.close()
-    '''
-    for vendor_alias in transaction_vendor_aliases:
-        # check if the alias is already in the dictionary, we have the vendor ID and can simply add to the alias table
-        #  if not, it needs to be added and the user needs to determine the apprpriate vendor 
-            # user can view current known vendors via the trie, if there isn't a match, user can add new vendor to DB
-        if vendor_alias in vendor_aliases:
-            # assign 
-    '''
 
 
     # Going to have to test for duplicates as it enters the transactions into the DB
