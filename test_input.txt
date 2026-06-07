@@ -1,0 +1,113 @@
+AMEX
+Chicken Place
+Restaurant
+Lowes
+Home Improvement
+Marathon
+Gas and Convenience
+Target
+Retail
+Carters
+Clothing
+Coursera
+Education
+Anthropic Claude
+Software Subscription
+Kroger
+Grocery
+Schnitzelbank Restaurant
+Restaurant
+Amazon
+Online Retail
+Mcdonalds
+Restaurant
+Spectrum
+Internet
+Netflix
+Streaming Subscription
+Starbucks
+Restaurant
+T Mobile
+Telecom
+Circle K
+Gas and Convenience
+Dairy Queen
+Restaurant
+CVS Pharmacy
+Pharmacy
+Youtube Premium
+Streaming Subscription
+Snaps Restaurant
+Restaurant
+Rural King
+Home Improvement
+Loves Travel Stop
+Gas and Convenience
+Amazon
+Online Retail
+Spotify
+Streaming Subscription
+Vectren Energy
+Utility
+Old Navy
+Clothing
+Chick Fil A
+Restaurant
+Adobe Creative Cloud
+Software Subscription
+Walmart
+Retail
+Amazon Prime
+Subscription
+Dubois Rec
+Recreation
+Memorial Hospital
+Healthcare
+Ebay
+Online Retail
+Speedway
+Gas and Convenience
+Github
+Software Subscription
+Menards
+Home Improvement
+Aldi
+Grocery
+The Home Depot
+Home Improvement
+Pololu Robotics
+Electronics
+Edible Arrangements
+Gifts
+Annual Membership Fee
+Credit Card Fee
+Mill House Restaurant
+Restaurant
+Buehlers Buy Low
+Grocery
+Buffalo Wild Wings
+Restaurant
+Walgreens
+Pharmacy
+Papa Johns
+Restaurant
+Mi Pueblito
+Restaurant
+Best Buy
+Electronics
+Sparkfun Electronics
+Electronics
+Micro Center
+Electronics
+Flowers
+Florist
+Adafruit
+Electronics
+Cracker Barrel
+Restaurant
+Hampton Inn
+Lodging
+Delta Air Lines
+Airline
+Uber
+Transportation

@@ -1,5 +1,5 @@
 import csv
-import pandas as pd
+#import pandas as pd
 import Database.database_manage as dbm
 import vendor_trie as vt
 
@@ -63,7 +63,8 @@ def parse_transactions(transactions):
 def load_transactions():    
     #transaction_filename = input("Enter Transaction CSV File Name: ")
     #transaction_filename = "Transactions/test_amex_transactions.csv"
-    transaction_filename = "Transactions/test_amex_transactions.csv"
+    transaction_filename = "Transactions/test_amex_transactions_resampled.csv"
+    #transaction_filename = "Transactions/test_amex_transactions_unique.csv"
 
     db_to_load = []
 

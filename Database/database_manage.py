@@ -190,14 +190,15 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                 vendor_details = get_vendor(vendor_name)
                 vendor_id = vendor_details[0][0]
                 vendor_trie.insert(vendor_name, vendor_type, vendor_id)
+                
                 insert_vendor_alias(tranx[2].lower().strip(), vendor_id)
                 
-
-        
         # assign the vendor id asigned to the already known alias to the transaction
         else:
             vendor_id = vendor_aliases[tranx[2].lower().strip()]
 
+        # Need to figure out when to add the alias to the alias dictionary so we know it going forward since Database (dictionary) isn't re-called    
+        vendor_aliases[tranx[2].lower().strip()] = vendor_id
 
 
         # Initial steps
