@@ -62,8 +62,8 @@ def parse_transactions(transactions):
 # Once GUI in place, option will be available for user to select file to load, for now use input
 def load_transactions():    
     #transaction_filename = input("Enter Transaction CSV File Name: ")
-    #transaction_filename = "Transactions/test_amex_transactions.csv"
-    transaction_filename = "Transactions/test_amex_transactions_resampled.csv"
+    transaction_filename = "Transactions/test_amex_transactions.csv"
+    #transaction_filename = "Transactions/test_amex_transactions_resampled.csv"
     #transaction_filename = "Transactions/test_amex_transactions_unique.csv"
 
     db_to_load = []
