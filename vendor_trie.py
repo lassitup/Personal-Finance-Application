@@ -8,6 +8,8 @@ when the user sees a new vendor name, we can ask if this is a new vendor or belo
 a different variant and should be an alias - the user can search for the vendor within the trie and if it's not there, we can 
 add new"""
 
+# TODO: need to add positions for numbers in case vendor name has numbers in it!
+
 class TrieNodeVendor:
     def __init__(self):
         # 1 array slot for each character of the alphabet plus 1 for space character
