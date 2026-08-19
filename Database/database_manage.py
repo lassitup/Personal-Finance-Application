@@ -170,20 +170,14 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
     function handles entering transactions, vendors and vendor aliases
 
     """
-    # Use 'executemany' to perform repeated SQL statements
-    # Insert Null as first value passed it - this will allow SQLite to autoincrement the primary key
-    # cursor.executemany("""INSERT INTO transactions VALUES(NULL, ?, ?, ?);""", transaction_list)
 
-    # Place all vendor names encountered from the transaction - this will subsequently be added to the vendor_alias table
-    # use a set for quicker access time
-    transaction_vendor_aliases = set()
+    # Determine if Transaction Table exists, if not create it before loading transactions
+    create_new_transaction_table()
+
     
     for tranx in transaction_list:
 
-        # This actually has to happen before loading the transactions so we can associate the transaction with the vendor
-        # Now that each transaction is loaded to the database, we need to load the vendor info into the database
-        # We have all of the new alias names from the loan. we need to link them up to their identifying name
-        # Ideally, I'd like to show the user a list of known vendor names and have them associate the alias with that vendor. 
+        # Vendor Determination Portion
 
         # TODO: going to need a second trie instance for vendor types user can select from
         if tranx[2].lower().strip() not in vendor_aliases:
@@ -202,25 +196,13 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                 # Add new alias to the database
                 insert_vendor_alias(tranx[2].lower().strip(), vendor_id)
 
+            # Add new alias to the vendor_alias dictionary with the related vendor number
             vendor_aliases[tranx[2].lower().strip()] = vendor_id
-        # assign the vendor id asigned to the already known alias to the transaction
+        # Assign the vendor id asigned to the already known alias to the transaction
         else:
             vendor_id = vendor_aliases[tranx[2].lower().strip()]
 
-        # TODO: Need to figure out when to add the alias to the alias dictionary so we know it going forward since Database (dictionary) isn't re-called    
-        # only need to do this if it's new
-        #vendor_aliases[tranx[2].lower().strip()] = vendor_id
-
-
-        # Initial steps
-        # before we load the transactions:
-        # 1. Query the database to obtain all of the current known aliases (we'll have all associated vendor ID's) - place these in a dictionary with their name as the key and vendor ID as the value
-        # 2. Load all known vendors into the trie (we'll populate it initially from db) - we'll have it's vendor id within the trie nodes at the target ending node
-        # 3. When the transaction load runs, we'll check within the vendor alias dictionary to see if it has already been seen.if the alias already exists, I want it to auto associate with the vendor id, and continues on. If it hasn't, we'll prompt the user to select which vendor it belongs to
-        # we can print out the available vendors for now (later will be a list they can review) and then using the trie, the user can input (with autocomplete/suggest) - if the option doesn't exist, the user can provide to create a new vendor
-
-        # Determine if Transaction Table exists, if not create it before loading transactions
-        create_new_transaction_table()
+        # Transaction DB Load Portion
 
         con = sqlite3.connect('Database/personal_finance_db.db')
         cursor = con.cursor()
@@ -235,15 +217,13 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                 print(tranx)
                 decision = input("(D)uplicate or (V)alid Transaction: ")
                 if decision.lower() == 'd':
+                    # TODO:Do I need to commit / close here? Need to think through when to open and close connections appropriately
                     con.commit()
                     con.close()
                     #Ignore transaction and move on if duplicate
                     continue
                 else:
-                    # Re-enter it into the database - need to detemrine how to modify it for entry so constraint isn't violated
-                    # maybe can extract the duplicate item from database, keep a map of the count of how many times we've encountered it and
-                    # update that account as we go - could keep a new column in the DB for duplicate counts
-                    # query all records that are 'duplicates' then find the current max value for count of these records and then increment by 1 for new record
+                    # Query all records that are 'duplicates' then find the current max value for count of these records and then increment the max value in the 'count' field by 1 for new record
                     res = cursor.execute("SELECT count FROM transactions WHERE transaction_date=? AND description=? AND amount=?", (tranx[1], tranx[2], tranx[3]))
                     duplicates = res.fetchall()
                     # Max compares tuples within the list lexographically to find the largest
@@ -251,10 +231,10 @@ def insert_transactions_from_file(transaction_list, vendor_trie, vendor_aliases)
                     try:
                         cursor.execute("INSERT INTO transactions (card_issuer, transaction_date, description, amount, count, vendor_id) VALUES(?, ?, ?, ?, ?, ?)", (tranx[0], tranx[1], tranx[2],tranx[3], max_count + 1, vendor_id))
                     except sqlite3.Error as er2:
-                        # Need to determine how to gracefully handle the errors
+                        # TODO: Need to determine how to gracefully handle the errors
                         print("Database Load Error Encountered")
             else:
-                # Need to determine how to gracefull hanndled the errors
+                # TODO: Need to determine how to gracefully handle the errors
                 print("Database Load Error Encountered")
             #print(er.sqlite_errorname)
             #print(er.sqlite_errorcode)

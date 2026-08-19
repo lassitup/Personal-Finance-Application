@@ -23,8 +23,9 @@ class VendorTrie():
         # initiate root node
         self.root = TrieNodeVendor()
 
-    def insert(self, key, type, vendor_id):
-        #ensure all characters are in lowercase so indices are in range
+    # Use default parameters for type and ID - We can then use this structure for basic vendor types as the key
+    def insert(self, key, type = None, vendor_id = None):
+        # Ensure all characters are in lowercase so indices are in range
         key = key.lower()
         cursor = self.root
 
@@ -47,8 +48,6 @@ class VendorTrie():
         cursor.is_word = True
 
 
-             
-
     def search(self, key):
         #ensure all characters are in lowercase so indices are in range
         key = key.lower()
@@ -69,9 +68,13 @@ class VendorTrie():
         return cursor.is_word, cursor.vendor_id, cursor.type
 
 
-
-    def populate_trie_from_db(self):
+    def populate_trie_from_db(self, extent):
         # Need to reset root
-        all_vendors = dbm.get_vendors()
-        for vendor in all_vendors:
-            self.insert(vendor[1], vendor[2], vendor[0])
+        if extent.lower() == "vendors":
+            all_vendors = dbm.get_vendors()
+            for vendor in all_vendors:
+                self.insert(vendor[1], vendor[2], vendor[0])
+        elif extent.lower() == "types":
+            all_vendor_types = dbm.get_vendor_types()
+            for vendor in all_vendor_types:
+                self.insert(vendor[0])

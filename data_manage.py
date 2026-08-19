@@ -15,13 +15,16 @@ dbm.create_new_vendor_table()
 vendor_aliases = dbm.get_vendor_aliases()
 
 # Returns a list of tuples each containing a known vendor type
-#vendor_types = dbm.get_vendor_types()
+vendor_types = dbm.get_vendor_types()
 
 # Returns the head of a new Vendor Trie
 vendors = vt.VendorTrie()
+# Returns the head of a new transaction type Trie
+transaction_types = vt.VendorTrie()
 
 # Populates the Trie with all known vendors and related details (ID, Type, Word Status)
-vendors.populate_trie_from_db()
+vendors.populate_trie_from_db("vendors")
+transaction_types.populate_trie_from_db("types")
 
 
 
@@ -93,9 +96,9 @@ def parse_transactions(transactions):
 # TODO: Once GUI in place, option will be available for user to select file to load, for now use hard coded input
 def load_credt_card_transactions():    
     #transaction_filename = input("Enter Transaction CSV File Name: ")
-    transaction_filename = "Transactions/test_amex_transactions.csv"
+    #transaction_filename = "Transactions/test_amex_transactions.csv"
     #transaction_filename = "Transactions/test_amex_transactions_resampled.csv"
-    # transaction_filename = "Transactions/test_amex_transactions_unique.csv"
+    transaction_filename = "Transactions/test_amex_transactions_unique.csv"
     #transaction_filename = "Transactions/test_amex_duplicates.csv"
 
     db_to_load = []
