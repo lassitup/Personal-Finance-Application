@@ -6,25 +6,7 @@ import datetime as dt
 
 
 
-# will later add ability to select database
-dbm.create_new_transaction_table()
-dbm.create_new_vendor_table()
 
-
-# Returns a dictionary of eahc known vendor alias mapped to its affiliated vendor number
-vendor_aliases = dbm.get_vendor_aliases()
-
-# Returns a list of tuples each containing a known vendor type
-vendor_types = dbm.get_vendor_types()
-
-# Returns the head of a new Vendor Trie
-vendors = vt.VendorTrie()
-# Returns the head of a new transaction type Trie
-transaction_types = vt.VendorTrie()
-
-# Populates the Trie with all known vendors and related details (ID, Type, Word Status)
-vendors.populate_trie_from_db("vendors")
-transaction_types.populate_trie_from_db("types")
 
 
 
@@ -114,6 +96,25 @@ def load_bank_transactions():
     pass
 
 
+if __name__ == "__main__":
+
+     # will later add ability to select database
+    dbm.create_new_transaction_table()
+    dbm.create_new_vendor_table()
 
 
-load_credt_card_transactions()
+    # Returns a dictionary of eahc known vendor alias mapped to its affiliated vendor number
+    vendor_aliases = dbm.get_vendor_aliases()
+
+    # Returns a list of tuples each containing a known vendor type
+    vendor_types = dbm.get_vendor_types()
+
+    # Returns the head of a new Vendor Trie
+    vendors = vt.VendorTrie()
+    # Returns the head of a new transaction type Trie
+    transaction_types = vt.VendorTrie()
+
+    # Populates the Trie with all known vendors and related details (ID, Type, Word Status)
+    vendors.populate_trie_from_db("vendors")
+    transaction_types.populate_trie_from_db("types")
+    load_credt_card_transactions()

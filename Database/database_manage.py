@@ -160,6 +160,26 @@ def get_vendor(vendor_name):
     return "Vendor table does not exist"
 
 
+def get_transactions():
+    # extract all vendors from DB
+    con = sqlite3.connect('Database/personal_finance_db.db')
+    cursor = con.cursor()
+
+    # Query the master table to check if the vendor table as already been created
+    res = cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Vendors';")
+    master_table = res.fetchone()
+
+    # check each returned table to see if Vendors is already included
+    if master_table is not None and 'Vendors' in master_table:
+        # need to add condition if vendor isn't found (try/except)?
+        res = cursor.execute("SELECT * FROM Transactions;")
+        transactions = res.fetchall()
+        con.close()
+        return transactions
+    con.close()
+    return "Transactions table does not exist"
+
+
 
 
 
